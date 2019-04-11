@@ -58,6 +58,7 @@ public class ColumnTypes {
 
             Pair.of(VoltType.TIMESTAMP, SqlTypeName.TIMESTAMP),
             Pair.of(VoltType.FLOAT, SqlTypeName.FLOAT),
+            Pair.of(VoltType.FLOAT, SqlTypeName.DOUBLE),
             Pair.of(VoltType.DECIMAL, SqlTypeName.DECIMAL),
 
             // Note - ethan - 12/28/2018:

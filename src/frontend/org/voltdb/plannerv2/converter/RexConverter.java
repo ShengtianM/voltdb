@@ -120,6 +120,28 @@ public class RexConverter {
                         (left, right) -> new ConjunctionExpression(exprType, left, right));
     }
 
+    private static AbstractExpression buildCaseWhenExpression(List<AbstractExpression> operands, int index, RelDataType rt) {
+        switch (operands.size() - index) {
+            case 1:
+                return operands.get(index);
+            case 0:
+            case 2:
+                throw new CalcitePlanningException(
+                        "Case-when expression must bear at least 3 sub-expressions: got " + operands.size());
+            default:
+                final AbstractExpression result = new OperatorExpression(ExpressionType.OPERATOR_CASE_WHEN,
+                        operands.get(index),
+                        new OperatorExpression(ExpressionType.OPERATOR_ALTERNATIVE,
+                                operands.get(index + 1),
+                                buildCaseWhenExpression(operands, index + 2, rt)));
+                if (index + 2 < operands.size()) {
+                    setType(result.getRight(), rt);
+                }
+                setType(result, rt);
+                return result;
+        }
+    }
+
     /**
      * Convert a Calcite RexCall to Volt AbstractExpression.
      *
@@ -274,7 +296,9 @@ public class RexConverter {
                         null);
                 RexConverter.setType(ae, call.getType());
                 break;
-
+            case CASE:
+                ae = buildCaseWhenExpression(aeOperands, 0, call.getType());
+                break;
 //            OPERATOR_CONCAT                (OperatorExpression.class,  5, "||"),
 //                // left || right (both must be char/varchar)
 //            OPERATOR_MOD                   (OperatorExpression.class,  6, "%"),
@@ -286,7 +310,7 @@ public class RexConverter {
                     ae = RexConverterHelper.createFunctionExpression(call.getType(), "concat", aeOperands, null);
                     RexConverter.setType(ae, call.getType());
                 } else {
-                    throw new CalcitePlanningException("Unsupported Calcite expression type: " +
+                    throw new CalcitePlanningException("Unsupported Calcite expression type? " +
                             call.op.kind.toString());
                 }
                 break;
@@ -295,7 +319,7 @@ public class RexConverter {
                 RexConverter.setType(ae, call.getType());
                 break;
             default:
-                throw new CalcitePlanningException("Unsupported Calcite expression type: " +
+                throw new CalcitePlanningException("Unsupported Calcite expression type! " +
                         call.op.kind.toString());
         }
         Preconditions.checkNotNull(ae);

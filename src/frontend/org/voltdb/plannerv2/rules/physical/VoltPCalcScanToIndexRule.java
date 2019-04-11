@@ -36,8 +36,10 @@ import org.voltdb.catalog.Index;
 import org.voltdb.catalog.Table;
 import org.voltdb.planner.AccessPath;
 import org.voltdb.plannerv2.VoltTable;
+import org.voltdb.plannerv2.rel.AbstractVoltTableScan;
 import org.voltdb.plannerv2.rel.physical.VoltPhysicalCalc;
 import org.voltdb.plannerv2.rel.physical.VoltPhysicalTableIndexScan;
+import org.voltdb.plannerv2.rel.physical.VoltPhysicalTableScan;
 import org.voltdb.plannerv2.rel.physical.VoltPhysicalTableSequentialScan;
 import org.voltdb.plannerv2.utils.IndexUtil;
 import org.voltdb.plannerv2.utils.VoltRexUtil;
@@ -54,16 +56,16 @@ public class VoltPCalcScanToIndexRule extends RelOptRule {
 
     @Override
     public boolean matches(RelOptRuleCall call) {
-        VoltPhysicalTableSequentialScan scan = call.rel(1);
-        VoltTable table = scan.getVoltTable();
+        final AbstractVoltTableScan scan = call.rel(1);
+        final VoltTable table = scan.getVoltTable();
         Preconditions.checkNotNull(table);
-        return  !table.getCatalogTable().getIndexes().isEmpty();
+        return ! table.getCatalogTable().getIndexes().isEmpty();
     }
 
     @Override
     public void onMatch(RelOptRuleCall call) {
         final VoltPhysicalCalc calc = call.rel(0);
-        final VoltPhysicalTableSequentialScan scan = call.rel(1);
+        final VoltPhysicalTableScan scan = call.rel(1);
 
         final RexProgram calcProgram = calc.getProgram();
 
@@ -112,5 +114,4 @@ public class VoltPCalcScanToIndexRule extends RelOptRule {
             call.transformTo(indexScan, equiv);
         }
     }
-
 }

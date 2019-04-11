@@ -1971,6 +1971,14 @@ public abstract class SubPlanAssembler {
             scanNode.setLookupType(path.lookupType);
             scanNode.setBindings(path.bindings);
             scanNode.setEndExpression(ExpressionUtil.combinePredicates(path.endExprs));
+            if (! path.index.getPredicatejson().isEmpty()) {
+                try {
+                    scanNode.setPartialIndexPredicate(
+                            AbstractExpression.fromJSONString(path.index.getPredicatejson(), tableScan));
+                } catch (JSONException e) {
+                    throw new PlanningErrorException(e.getMessage(), 0);
+                }
+            }
             scanNode.setPredicate(path.otherExprs);
             // Propagate the sorting information
             // into the scan node from the access path.
